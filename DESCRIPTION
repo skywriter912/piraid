@@ -6,7 +6,7 @@ Title: An aid for development and diagnosis of pharmacometric 'IRT' models
 Authors@R: c(person("Rikard", "Nordgren", role=c("aut", "cre", "cph"), email="rikard.nordgren@uu.se"),
              person("Sebastian", "Ueckert", role=c("aut", "cph")),
              person("Mats O.", "Karlsson", role=c("aut", "cph")),
-             person("Daria Zhuravleva", role=c("aut", "cph")),
+             person("Daria", "Zhuravleva", role=c("aut", "cph")),
              person("Leticia", "Arrington", role=c("ctb")))
 Maintainer: Rikard Nordgren <rikard.nordgren@uu.se>
 Depends:
