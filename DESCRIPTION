@@ -3,11 +3,12 @@ Encoding: UTF-8
 Version: 0.5.0
 Date: 2023-02-28
 Title: An aid for development and diagnosis of pharmacometric 'IRT' models
-Authors@R: c(person("Rikard", "Nordgren", role=c("aut", "cre", "cph"), email="rikard.nordgren@farmaci.uu.se"),
+Authors@R: c(person("Rikard", "Nordgren", role=c("aut", "cre", "cph"), email="rikard.nordgren@uu.se"),
              person("Sebastian", "Ueckert", role=c("aut", "cph")),
              person("Mats O.", "Karlsson", role=c("aut", "cph")),
+             person("Daria", "Zhuravleva", role=c("aut", "cph")),
              person("Leticia", "Arrington", role=c("ctb")))
-Maintainer: Rikard Nordgren <rikard.nordgren@farmbio.uu.se>
+Maintainer: Rikard Nordgren <rikard.nordgren@uu.se>
 Depends:
     R (>= 3.3.0)
 Imports:
