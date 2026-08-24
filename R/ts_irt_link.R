@@ -11,7 +11,10 @@ combine_dist <- function(scores1, probs1, scores2, probs2) {
   )
 }
 
-# the function calculates the probability mass function for the total score given psi
+# the function calculates the probability mass function for the total score 
+# given psi and item_lables
+# the output is matrix 
+# rows - number of psi values; columns - number of unique total score values
 pmf_ts_labels <- function(model, psi, item_labels){
   if(inherits(model, "SingleGroupClass")){
     mirt_model <- model
@@ -401,6 +404,7 @@ calculate_bi_irt_link <- function(model,
       return(rowSums(item_probs * rep(vec_labels, 
                                       each = nrow(item_probs))))
     }
+    # function calculating the mean z-score
     f_mu_labels <- function(model, psi, item_labels){
       pmf <- pmf_ts_labels(model, psi, item_labels) 
       scores <- matrix(seq(0, ncol(pmf)-1), nrow = 1)
@@ -409,7 +413,7 @@ calculate_bi_irt_link <- function(model,
       zscores <- drop(qnorm(pscores))
       drop(pmf %*% zscores)
     }
-    # function calculating the sd score
+    # function calculating the sd z-score
     f_sd_labels <- function(model, psi, item_labels){
       pmf <- pmf_ts_labels(model, psi, item_labels)
       scores <- matrix(seq(0, ncol(pmf)-1), nrow = 1)
