@@ -1,3 +1,48 @@
+#' Checker for item_labels
+#' If NULL - make default one: labels (0,1,2,3...) for each item
+#' If provided - check that
+#' (1) all items have new labels
+#' (2) each level of each item has new labels
+#'
+#' @param model 
+#' @param item_labels - list in the form list("ITEM_1"=c(...), "ITEM_2"=c(...),..., "ITEM_N"=c(...))
+check_item_labels = function(model, input_item_labels=NULL){
+  if(is.null(input_item_labels)){
+    # # The default attribution 
+    # # list("ITEM_1"=c(0,1,2...,m1), "ITEM_2"=c(0,1,2,..,m2),..., "ITEM_N"=c(0,1,2,...,mn))
+    item_labels <- setNames(
+      lapply(model$scale$items, function(item) {
+        0:(length(item$levels) - 1)
+      }),paste0("ITEM_", seq_along(model$scale$items))
+    )
+    return(item_labels)
+    
+  } else {
+    
+    # check if all ITEMs are supplied with labels
+    if(length(model$scale$items)!=length(input_item_labels)){
+      stop(paste0("Numbers of items in the model and in the list of labels do not match: ",
+                  length(model$scale$items), " items in the model, but ",
+                  length(input_item_labels), " items in the list of labels"),
+           call. = FALSE)
+    }
+    
+    # check if all levels of each item have new labels
+    mismatch <- vapply(
+      c(1:length(model$scale$items)),
+      function(item) {length(model$scale$items[[item]]$levels) != length(input_item_labels[[paste0("ITEM_",item)]])},
+      logical(1))
+    if (any(mismatch)) {
+      stop(paste0("Mismatch in the number of labels for: ",
+                  paste("ITEM_", c(1:length(model$scale$items))[mismatch], collapse = ", ", sep="")),
+           call. = FALSE)
+    }
+    
+    return(input_item_labels)
+  }
+}
+
+
 combine_dist <- function(scores1, probs1, scores2, probs2) {
   sums <- outer(scores1, scores2, "+")
   probs <- outer(probs1, probs2, "*")
@@ -140,7 +185,7 @@ plot_sd_score_vs_psi <- function(model, ...){
 #' @export
 calculate_sd_zscore_vs_psi <- function(model, psi_range = c(-4, 4)){
     psi_grid <- seq(psi_range[1], psi_range[2], length.out = 100)
-    pmf <- pmf_ts(model, psi_grid) 
+    pmf <- pmf_ts_labels(model, psi_grid) 
     scores <- matrix(seq(0, ncol(pmf)-1), nrow = 1)
     mx <- max(scores)
     pscores <- (scores+0.5)/(mx+1)
@@ -188,36 +233,7 @@ calculate_cv_irt_link <- function(model, item_labels = NULL,
                                   approx_tol_sd  = 0.01, 
                                   max_degree = 100){
   
-  if(is.null(item_labels)){
-    # # The default attribution 
-    # # list("ITEM_1"=c(0,1,2...,m1), "ITEM_2"=c(0,1,2,..,m2),..., "ITEM_N"=c(0,1,2,...,mn))
-    item_labels <- setNames(
-      lapply(model$scale$items, function(item) {
-        0:(length(item$levels) - 1)
-      }),paste0("ITEM_", seq_along(model$scale$items))
-    )
-    
-  } else {
-    
-    # check if all ITEMs are supplied with labels
-    if(length(model$scale$items)!=length(item_labels)){
-      stop(paste0("Numbers of items in the model and in the list of labels do not match: ",
-                  length(model$scale$items), " items in the model, but ",
-                  length(item_labels), " items in the list of labels"),
-           call. = FALSE)
-    }
-    
-    # check if all levels of each item have new labels
-    mismatch <- vapply(
-      c(1:length(model$scale$items)),
-      function(item) {length(model$scale$items[[item]]$levels) != length(item_labels[[paste0("ITEM_",item)]])},
-      logical(1))
-    if (any(mismatch)) {
-      stop(paste0("Mismatch in the number of labels for: ",
-                  paste("ITEM_", c(1:length(model$scale$items))[mismatch], collapse = ", ", sep="")),
-           call. = FALSE)
-    }
-  }
+  item_labels = check_item_labels(model, item_labels)
   
   mirt_model <- as_mirt_model(model)
   result <- list()
@@ -361,36 +377,7 @@ calculate_bi_irt_link <- function(model,
                                   corr_factor = 1,
                                   sim_default = TRUE){
     
-  if(is.null(item_labels)){
-    # # The default attribution 
-    # # list("ITEM_1"=c(0,1,2...,m1), "ITEM_2"=c(0,1,2,..,m2),..., "ITEM_N"=c(0,1,2,...,mn))
-    item_labels <- setNames(
-      lapply(model$scale$items, function(item) {
-        0:(length(item$levels) - 1)
-      }),paste0("ITEM_", seq_along(model$scale$items))
-    )
-    
-  } else {
-    
-    # check if all ITEMs are supplied with labels
-    if(length(model$scale$items)!=length(item_labels)){
-      stop(paste0("Numbers of items in the model and in the list of labels do not match: ",
-                  length(model$scale$items), " items in the model, but ",
-                  length(item_labels), " items in the list of labels"),
-           call. = FALSE)
-    }
-    
-    # check if all levels of each item have new labels
-    mismatch <- vapply(
-      c(1:length(model$scale$items)),
-      function(item) {length(model$scale$items[[item]]$levels) != length(item_labels[[paste0("ITEM_",item)]])},
-      logical(1))
-    if (any(mismatch)) {
-      stop(paste0("Mismatch in the number of labels for: ",
-                  paste("ITEM_", c(1:length(model$scale$items))[mismatch], collapse = ", ", sep="")),
-           call. = FALSE)
-    }
-  }
+  item_labels = check_item_labels(model, item_labels)
   
   mirt_model <- as_mirt_model(model)
     result <- list()
