@@ -119,16 +119,24 @@ var_score <- function(pmf){
 #'
 #' @param model An irt_model object
 #' @param psi_range A vector of lenght 2 specifying the lower and upper boundary for the latent variable
+#' @param item_labels - list in the form list("ITEM_1"=c(...), "ITEM_2"=c(...),..., "ITEM_N"=c(...))
 #'
 #' @return A data.frame or a plot 
 #' @export
-calculate_e_score_vs_psi <- function(model, psi_range = c(-4,4)){
-    mirt_model <- as_mirt_model(model)
-    theta <- seq(psi_range[1], psi_range[2], length.out = 100)
-    tibble::tibble(
-        psi = theta,
-        score = mirt::expected.test(mirt_model, matrix(theta))
-    )
+calculate_e_score_vs_psi <- function(model, psi_range = c(-4,4),
+                                     item_labels = NULL){
+  item_labels = check_item_labels(model, item_labels)
+  theta <- seq(psi_range[1], psi_range[2], length.out = 100)
+  mirt_model <- as_mirt_model(model)
+  item_probs = mirt::expected.test(mirt_model, theta,
+                                   individual=TRUE, probs.only=TRUE)
+  vec_labels = unlist(item_labels, use.names = FALSE)
+  scores = rowSums(item_probs * rep(vec_labels, 
+                                    each = nrow(item_probs)))
+  tibble::tibble(
+    psi = theta,
+    score = scores)
+  )
 }
 
 #' @export
@@ -142,27 +150,37 @@ plot_e_score_vs_psi <- function(model, ...){
 }
 
 #' @export
-#' @rdname calculate_e_score_vs_psi
-calculate_sd_score_vs_psi <- function(model, psi_range = c(-4,4)){
-    mirt_model <- as_mirt_model(model)
-    theta <- seq(psi_range[1], psi_range[2], length.out = 100)
-    prob <- purrr::map(seq_along(get_mirt_names(model)), ~mirt::extract.item(mirt_model, .x)) %>%
-        purrr::map(~mirt::probtrace(.x, theta))
-    escore <- purrr::map(seq_along(get_mirt_names(model)), ~mirt::extract.item(mirt_model, .x)) %>%
-        purrr::map(~mirt::expected.item(.x, theta))
-    
-    item_levels <- purrr::map(model$scale$items, "levels") %>% 
-        purrr::map(~matrix(.x, nrow = length(theta), ncol = length(.x), byrow = TRUE))
-    
-    sd_score <- purrr::map2(item_levels, escore, ~.x-.y) %>% 
-        purrr::map2(prob, ~rowSums(.y*.x^2)) %>% 
-        purrr::reduce(`+`) %>% 
-        sqrt
-
-    tibble::tibble(
-        psi = theta,
-        sd_score = sd_score
-    ) 
+#' @rdname calculate_sd_score_vs_psi
+calculate_sd_score_vs_psi <- function(model, psi_range = c(-4,4),
+                                      item_labels=NULL){
+  item_labels = check_item_labels(model, item_labels)
+  theta <- seq(psi_range[1], psi_range[2], length.out = 100)
+  mirt_model <- as_mirt_model(model)
+  
+  prob <- purrr::map(seq_along(get_mirt_names(model)), 
+                     ~mirt::extract.item(mirt_model, .x)) %>%
+    purrr::map(~mirt::probtrace(.x, theta))
+  item_names <- get_mirt_names(model)
+  
+  escore <- purrr::map(seq_along(item_names), function(i) {
+    item <- mirt::extract.item(mirt_model, i)
+    labels <- item_labels[[item_names[i]]]
+    probs <- mirt::probtrace(item, Theta = theta)
+    as.vector(probs %*% labels)
+  })
+  
+  item_levels <- purrr::map(item_labels, ~
+                              matrix(.x, length(theta), length(.x), byrow = TRUE))
+  
+  sd_score <- purrr::map2(item_levels, escore, ~.x-.y) %>% 
+    purrr::map2(prob, ~rowSums(.y*.x^2)) %>% 
+    purrr::reduce(`+`) %>% 
+    sqrt
+  
+  tibble::tibble(
+    psi = theta,
+    sd_score = sd_score
+  ) 
 }
 
 
