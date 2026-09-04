@@ -198,24 +198,25 @@ plot_sd_score_vs_psi <- function(model, ...){
 #'
 #' @param model An irt_model object
 #' @param psi_range A vector of lenght 2 specifying the lower and upper boundary for the latent variable
+#' @param item_labels - list in the form list("ITEM_1"=c(...), "ITEM_2"=c(...),..., "ITEM_N"=c(...))
 #'
 #' @return A data.frame or a plot 
 #' @export
-calculate_sd_zscore_vs_psi <- function(model, psi_range = c(-4, 4)){
-    psi_grid <- seq(psi_range[1], psi_range[2], length.out = 100)
-    pmf <- pmf_ts_labels(model, psi_grid) 
-    scores <- matrix(seq(0, ncol(pmf)-1), nrow = 1)
-    mx <- max(scores)
-    pscores <- (scores+0.5)/(mx+1)
-    zscores <- drop(qnorm(pscores))
-    mu <- pmf %*% zscores
-    
-    var <- diag(t(vapply(mu, function(mu_i)  zscores-mu_i, FUN.VALUE = zscores))^2 %*% t(pmf))
-
-    tibble::tibble(
-        psi = psi_grid,
-        sd_zscore = sqrt(var)
-    )
+calculate_sd_zscore_vs_psi <- function(model, psi_range = c(-4, 4),
+                                       item_labels=NULL){
+  item_labels = check_item_labels(model, item_labels)
+  psi_grid <- seq(psi_range[1], psi_range[2], length.out = 100)
+  pmf <- pmf_ts_labels(model, psi, item_labels) 
+  scores <- matrix(seq(0, ncol(pmf)-1), nrow = 1)
+  mx <- max(scores)
+  pscores <- (scores+0.5)/(mx+1)
+  zscores <- drop(qnorm(pscores))
+  mu <- pmf %*% zscores
+  var <- diag(t(vapply(mu, function(mu_i)  zscores-mu_i, FUN.VALUE = zscores))^2 %*% t(pmf))
+  tibble::tibble(
+    psi = psi_grid,
+    sd_zscore = sqrt(var)
+  )
 }
 
 #' @export
