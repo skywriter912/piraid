@@ -71,9 +71,9 @@ pmf_ts_labels <- function(model, psi, item_labels){
     function(x, y) unique(round(as.vector(outer(x, y, "+")), 6)),
     item_labels)))
   
-  item_names <- extract.mirt(model, "itemnames")
+  item_names <- extract.mirt(mirt_model, "itemnames")
   prob_trace <- lapply(item_names, function(nm) {
-    probtrace(extract.item(model, nm), as.matrix(psi))})
+    probtrace(extract.item(mirt_model, nm), as.matrix(psi))})
   names(prob_trace) <- item_names
   
   n_psi <- length(psi)
